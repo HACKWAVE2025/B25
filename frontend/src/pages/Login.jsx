@@ -41,6 +41,49 @@
 //     </div>
 //   );
 // }
+// import { useState } from 'react';
+// import http from '../api/http';
+
+// export default function Login() {
+//   const [email, setEmail] = useState('admin@ayusahayak.in');
+//   const [password, setPassword] = useState('Admin@12345');
+//   const [error, setError] = useState('');
+
+//   const onSubmit = async (e) => {
+//     e.preventDefault();
+//     setError('');
+//     try {
+//       const { data } = await http.post('/auth/login', { email, password });
+//       localStorage.setItem('accessToken', data.accessToken);
+//       localStorage.setItem('user', JSON.stringify(data.user));
+//       const role = data.user.role;
+//       if (role === 'admin') window.location.href = '/admin';
+//       else if (role === 'hospital_owner') window.location.href = '/owner';
+//       else if (role === 'nurse') window.location.href = '/nurse';
+//       else if (role === 'doctor') window.location.href = '/doctor';
+//     } catch (e) {
+//       setError(e.response?.data?.message || 'Login failed');
+//     }
+//   };
+
+//   return (
+//     <div style={{ maxWidth: 360, margin: '80px auto' }}>
+//       <h2>AyuSahayak Login</h2>
+//       <form onSubmit={onSubmit}>
+//         <div>
+//           <label>Email</label>
+//           <input value={email} onChange={(e)=>setEmail(e.target.value)} />
+//         </div>
+//         <div>
+//           <label>Password</label>
+//           <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
+//         </div>
+//         <button type="submit">Login</button>
+//         {error && <p style={{ color:'red' }}>{error}</p>}
+//       </form>
+//     </div>
+//   );
+// }
 import { useState } from 'react';
 import http from '../api/http';
 
@@ -73,296 +116,274 @@ export default function Login() {
   return (
     <>
       <style>{`
-        .login-container {
+        :root{
+          --bg: #f7fbff;
+          --bg-soft: #f9fcff;
+          --card: #ffffff;
+          --ink: #1f2a44;
+          --sub: #73809b;
+          --ring: #10b6c7;
+          --ring-weak: #b8f2f7;
+          --accent: #11c5c5;
+          --accent-2: #2db4e4;
+          --border: #e8eef6;
+        }
+        body{ background: var(--bg); }
+
+        .auth-wrap{
           min-height: 100vh;
-          display: flex;
-          background: linear-gradient(135deg, #0D47A1 0%, #1565C0 50%, #00897B 100%);
+          display: grid;
+          place-items: center;
+          padding: clamp(16px, 3vw, 36px);
+          background:
+            radial-gradient(1200px 500px at -10% -10%, #eaf6ff 0%, transparent 60%),
+            radial-gradient(1200px 500px at 110% 110%, #e9fff7 0%, transparent 60%),
+            var(--bg);
+        }
+
+        .auth-shell{
+          width: min(1040px, 100%);
+          display: grid;
+          grid-template-columns: 1.15fr 1fr;
+          gap: 0;
+          border-radius: 22px;
+          background: var(--card);
+          border: 1px solid var(--border);
+          overflow: clip;
+          box-shadow:
+            0 8px 26px rgba(16,41,80,0.06),
+            0 14px 48px rgba(16,41,80,0.06);
+        }
+
+        /* Left brand pane */
+        .brand-pane{
           position: relative;
-          overflow: hidden;
+          background:
+            radial-gradient(180px 180px at 20% 15%, #e8fff9 0%, transparent 60%),
+            radial-gradient(220px 220px at 85% 80%, #e9f6ff 0%, transparent 60%),
+            linear-gradient(120deg, #f5feff 0%, #f4fbff 45%, #f7fffb 100%);
+          display: grid;
+          place-items: center;
+          padding: clamp(28px, 3.5vw, 40px);
         }
-        
-        .login-container::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          right: -20%;
-          width: 800px;
-          height: 800px;
-          background: rgba(255,255,255,0.05);
-          border-radius: 50%;
-        }
-        
-        .login-container::after {
-          content: '';
-          position: absolute;
-          bottom: -30%;
-          left: -10%;
-          width: 600px;
-          height: 600px;
-          background: rgba(255,255,255,0.03);
-          border-radius: 50%;
-        }
-        
-        .login-left {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding: 60px;
-          color: white;
-          position: relative;
-          z-index: 1;
-        }
-        
-        .login-logo {
-          font-size: 48px;
-          font-weight: 700;
-          margin-bottom: 24px;
-          font-family: 'Merriweather', serif;
-        }
-        
-        .login-tagline {
-          font-size: 20px;
-          opacity: 0.95;
-          line-height: 1.6;
-          max-width: 500px;
-        }
-        
-        .login-features {
-          margin-top: 48px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        
-        .feature-item {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        
-        .feature-icon {
-          width: 48px;
-          height: 48px;
-          background: rgba(255,255,255,0.15);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-        }
-        
-        .login-right {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 40px;
-          position: relative;
-          z-index: 1;
-        }
-        
-        .login-card {
-          background: white;
-          border-radius: 24px;
-          padding: 48px;
-          box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+
+        .brand-frame{
           width: 100%;
           max-width: 460px;
-          animation: fadeInUp 0.6s ease-out;
+          display: grid;
+          align-content: center;
+          justify-items: center;
+          gap: 18px;
+          /* height matches the form-pane for aligned look */
+          min-height: 520px;
         }
-        
-        .login-title {
-          font-size: 32px;
-          font-weight: 700;
-          color: var(--color-gray-700);
-          margin-bottom: 12px;
+
+        .brand-logo{
+          width: clamp(140px, 30vw, 260px);
+          max-height: 360px;          /* keep proportional with card */
+          object-fit: contain;
+          border-radius: 16px;
+          box-shadow: 0 8px 32px rgba(40,86,130,0.10);
+          background: #fff;
         }
-        
-        .login-subtitle {
-          color: var(--color-gray-400);
-          margin-bottom: 32px;
+
+        .brand-title{
+          font-size: clamp(22px, 3.1vw, 28px);
+          font-weight: 800;
+          letter-spacing: 0.2px;
+          color: var(--ink);
+          text-align: center;
         }
-        
-        .form-group {
-          margin-bottom: 24px;
-        }
-        
-        .form-label {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 500;
-          color: var(--color-gray-600);
+        .brand-tag{
+          color: var(--sub);
           font-size: 14px;
+          text-align: center;
+          max-width: 420px;
+          line-height: 1.55;
         }
-        
-        .form-input {
+
+        /* Right form pane */
+        .form-pane{
+          display: grid;
+          align-content: center;
+          padding: clamp(24px, 4.2vw, 48px);
+          background: var(--card);
+          min-height: 520px;           /* matches brand-pane min-height */
+        }
+
+        .card-head{
+          margin-bottom: 14px;
+        }
+        .card-title{
+          font-size: clamp(22px, 3vw, 26px);
+          font-weight: 800;
+          color: var(--ink);
+          margin: 0 0 6px 0;
+        }
+        .card-sub{
+          color: var(--sub);
+          font-size: 14px;
+          margin: 0;
+        }
+
+        .form-grid{
+          margin-top: 18px;
+          display: grid;
+          gap: 16px;
+        }
+
+        .label{
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: #2a3550;
+          margin: 0 0 6px 2px;
+        }
+        .input{
           width: 100%;
-          padding: 14px 16px;
-          border: 2px solid var(--color-gray-100);
+          padding: 13px 14px;
+          border: 1.6px solid var(--border);
           border-radius: 12px;
+          background: var(--bg-soft);
+          color: var(--ink);
           font-size: 15px;
-          transition: all 0.2s;
-          background: var(--color-gray-50);
+          transition: border .15s, box-shadow .15s, background .15s;
         }
-        
-        .form-input:focus {
+        .input::placeholder{ color: #9aa7bb; }
+        .input:focus{
           outline: none;
-          border-color: var(--color-primary);
-          background: white;
-          box-shadow: 0 0 0 4px rgba(13,71,161,0.08);
+          background: #fff;
+          border-color: var(--ring);
+          box-shadow: 0 0 0 4px color-mix(in oklab, var(--ring) 18%, transparent);
         }
-        
-        .submit-btn {
+
+        .btn{
           width: 100%;
-          padding: 16px;
-          background: linear-gradient(135deg, #0D47A1 0%, #1565C0 100%);
-          color: white;
           border: none;
           border-radius: 12px;
-          font-size: 16px;
-          font-weight: 600;
+          padding: 14px 16px;
+          font-weight: 700;
+          font-size: 15px;
           cursor: pointer;
-          transition: all 0.3s;
-          margin-top: 8px;
+          transition: transform .12s ease, box-shadow .2s ease, opacity .2s ease;
+          background: linear-gradient(94deg, var(--accent) 0%, var(--accent-2) 100%);
+          color: #fff;
+          box-shadow: 0 8px 24px rgba(17, 197, 197, 0.18);
         }
-        
-        .submit-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(13,71,161,0.3);
+        .btn:hover:not(:disabled){
+          transform: translateY(-1.5px);
+          box-shadow: 0 12px 28px rgba(35, 178, 210, 0.22);
         }
-        
-        .submit-btn:active:not(:disabled) {
-          transform: translateY(0);
-        }
-        
-        .submit-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-        
-        .error-msg {
-          background: #FFEBEE;
-          color: #C62828;
-          padding: 12px 16px;
-          border-radius: 8px;
-          margin-top: 16px;
-          font-size: 14px;
-          display: flex;
+        .btn:active:not(:disabled){ transform: translateY(0); }
+        .btn:disabled{ opacity: .7; cursor: not-allowed; }
+
+        .error{
+          margin-top: 12px;
+          display: grid;
+          grid-auto-flow: column;
+          justify-content: start;
           align-items: center;
           gap: 8px;
+          font-size: 13.5px;
+          padding: 12px 14px;
+          border-radius: 10px;
+          background: #fff1f1;
+          color: #c92525;
+          border: 1px solid #ffdcdc;
+        }
+
+        .hint{
+          margin-top: 12px;
+          font-size: 12.5px;
+          color: var(--sub);
+          text-align: center;
+        }
+
+        html, body {
+          height: 100%;
+          overflow: hidden;            
         }
         
-        .spinner {
-          display: inline-block;
-          width: 18px;
-          height: 18px;
-          border: 2px solid rgba(255,255,255,0.3);
-          border-top-color: white;
-          border-radius: 50%;
-          animation: spin 0.6s linear infinite;
+        .auth-wrap, .login-page-root, .login-container {
+          min-height: 100vh;
+          max-height: 100vh;          
+          overflow: hidden;           
         }
-        
-        @media (max-width: 968px) {
-          .login-container {
-            flex-direction: column;
-          }
-          .login-left {
-            padding: 40px 24px;
-          }
-          .login-features {
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          .login-right {
-            padding: 24px;
-          }
-          .login-card {
-            padding: 32px 24px;
-          }
+
+
+        @media (max-width: 980px){
+          .auth-shell{ grid-template-columns: 1fr; }
+          .brand-frame, .form-pane{ min-height: auto; }
+          .brand-frame{ padding-top: 10px; padding-bottom: 6px; }
         }
       `}</style>
-      
-      <div className="login-container">
-        <div className="login-left">
-          <div className="login-logo">🏥 AyuSahayak</div>
-          <div className="login-tagline">
-            Advanced Healthcare Platform for Seamless Patient Care & Hospital Management
-          </div>
-          <div className="login-features">
-            <div className="feature-item">
-              <div className="feature-icon">👨‍⚕️</div>
-              <div>
-                <div style={{fontWeight:600}}>Expert Doctors</div>
-                <div style={{opacity:0.8,fontSize:14}}>24/7 consultation available</div>
-              </div>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon">📱</div>
-              <div>
-                <div style={{fontWeight:600}}>Digital Records</div>
-                <div style={{opacity:0.8,fontSize:14}}>Secure patient management</div>
-              </div>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon">🎥</div>
-              <div>
-                <div style={{fontWeight:600}}>Video Consultation</div>
-                <div style={{opacity:0.8,fontSize:14}}>Connect from anywhere</div>
-              </div>
+
+      <div className="auth-wrap">
+        <div className="auth-shell">
+
+          {/* Left: Brand / Image */}
+          <div className="brand-pane">
+            <div className="brand-frame">
+              <img src="/AyuSahayakNewLogo.jpg" alt="AyuSahayak" className="brand-logo" />
+              
+                <h3>A trusted digital bridge between village nurses,hospital doctors and patients</h3>
+             
             </div>
           </div>
-        </div>
-        
-        <div className="login-right">
-          <div className="login-card">
-            <h2 className="login-title">Welcome Back</h2>
-            <p className="login-subtitle">Sign in to access your dashboard</p>
-            
-            <form onSubmit={onSubmit}>
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
+
+          {/* Right: Form Card */}
+          <div className="form-pane">
+            <div className="card-head">
+              <h2 className="card-title">Welcome back</h2>
+              <p className="card-sub">Sign in to continue to your dashboard</p>
+            </div>
+
+            <form onSubmit={onSubmit} className="form-grid" noValidate>
+              <div>
+                <label className="label">Email address</label>
                 <input
                   type="email"
-                  className="form-input"
+                  className="input"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  onChange={(e)=>setEmail(e.target.value)}
+                  placeholder="you@example.com"
                   required
+                  autoComplete="username"
                 />
               </div>
-              
-              <div className="form-group">
-                <label className="form-label">Password</label>
+
+              <div>
+                <label className="label">Password</label>
                 <input
                   type="password"
-                  className="form-input"
+                  className="input"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  onChange={(e)=>setPassword(e.target.value)}
+                  placeholder="••••••••"
                   required
+                  autoComplete="current-password"
                 />
               </div>
-              
-              <button type="submit" className="submit-btn" disabled={loading}>
-                {loading ? (
-                  <>
-                    <span className="spinner"></span> Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
+
+              <button type="submit" className="btn" disabled={loading}>
+                {loading ? 'Signing in…' : 'Sign In'}
               </button>
-              
+
               {error && (
-                <div className="error-msg">
+                <div className="error" role="alert" aria-live="polite">
                   <span>⚠️</span> {error}
                 </div>
               )}
+
+              <div className="hint">
+                Use your AyuSahayak account to access Admin, Owner, Nurse, or Doctor views.
+              </div>
             </form>
           </div>
+
         </div>
       </div>
     </>
   );
 }
+

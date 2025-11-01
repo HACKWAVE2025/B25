@@ -413,14 +413,13 @@ export default function Hospitals() {
           color: white;
         }
         
-        .action-btn.activate {
-          background: var(--color-success);
-          color: white;
+        .action-btn.suspend {
+        background: #e53935; /* red */
+        color: white;
         }
-        
-        .action-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        .action-btn.activate {
+          background: #43a047; /* green */
+          color: white;
         }
         
         .empty-state {

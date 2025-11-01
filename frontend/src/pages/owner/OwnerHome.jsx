@@ -16,9 +16,26 @@
 //     </div>
 //   );
 // }
+import { useEffect, useState } from 'react';
 import OwnerNav from '../../components/OwnerNav';
+import http from '../../api/http';
+
 
 export default function OwnerHome() {
+  const [hospital, setHospital] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await http.get('/hospital/me'); // expects server to mount at /api/hospital
+        setHospital(data);
+      } catch (e) {
+        console.warn('hospital/me failed', e?.response?.status, e?.response?.data);
+        setHospital(null);
+      }
+    };
+    load();
+  }, []);
   return (
     <>
       <style>{`
@@ -164,10 +181,17 @@ export default function OwnerHome() {
         <OwnerNav />
         
         <div className="owner-content">
-          <div className="page-header">
-            <h1 className="page-title">Hospital Dashboard</h1>
-            <p className="page-subtitle">Manage your hospital staff and operations</p>
+<div className="page-header">
+            <h1 className="page-title">
+              {`${hospital?.name} Hospitals Dashboard`|| 'Hospital Dashboard'}
+            </h1>
+            <h3
+            
+            className="page-subtitle">
+              {hospital?.name ? `Manage ${hospital.name} staff and operations` : 'Manage your hospital staff and operations'}
+            </h3>
           </div>
+
           
           <div className="stats-grid">
             <div className="stat-card">
@@ -189,7 +213,7 @@ export default function OwnerHome() {
             </div>
           </div>
           
-          <div className="quick-actions">
+          {/* <div className="quick-actions">
             <h3 className="section-title">Quick Actions</h3>
             
             <div className="action-list">
@@ -223,7 +247,7 @@ export default function OwnerHome() {
                 </button>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </>
