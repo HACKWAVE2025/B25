@@ -15,6 +15,9 @@ import ConsultationDetails from './pages/doctor/ConsultationDetails';
 import PrescriptionView from './pages/nurse/PrescriptionView';
 import EditPatient from './pages/nurse/EditPatient';
 import VideoCall from './pages/common/VideoCall';
+import SkinCareAI from './pages/ai/SkinCareAI';
+import WoundCareAI from './pages/ai/WoundCareAI';
+import RuralCareAI from './pages/ai/RuralCareAI';
 
 
 function PrivateRoute({ children, roles }) {
@@ -149,6 +152,10 @@ export default function App() {
     </PrivateRoute>
   }
 />
+<Route path="/ai/skin" element={<PrivateRoute role="nurse"><SkinCareAI /></PrivateRoute>} />
+<Route path="/ai/wound" element={<PrivateRoute role="nurse"><WoundCareAI /></PrivateRoute>} />
+<Route path="/ai/rural" element={<PrivateRoute role="nurse"><RuralCareAI /></PrivateRoute>} />
+
 
     </Routes>
   );

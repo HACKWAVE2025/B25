@@ -3,6 +3,60 @@ const User = require('../models/User');
 const Hospital = require('../models/Hospital');
 const { sendEmail } = require('../utils/email/emailService');
 const { audit } = require('../middleware/auditHook');
+const Patient = require('../models/Patient');
+const Payment = require('../models/Payment');
+
+
+async function getPlatformStats(req, res, next) {
+  try {
+    const [hospitalsCount, doctorsCount, nursesCount] = await Promise.all([
+      Hospital.countDocuments({}),
+      User.countDocuments({ role: 'doctor' }),
+      User.countDocuments({ role: 'nurse' })
+    ]);
+
+    // Patients per hospital (include hospital name)
+    const patientsAgg = await Patient.aggregate([
+      { $group: { _id: '$hospitalId', count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: 'hospitals',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'hospital'
+        }
+      },
+      { $unwind: { path: '$hospital', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 0,
+          hospitalId: '$_id',
+          hospitalName: { $ifNull: ['$hospital.name', 'Unknown'] },
+          count: 1
+        }
+      },
+      { $sort: { hospitalName: 1 } }
+    ]);
+
+// Total revenue from all hospitals (amount already in rupees)
+const revenueAgg = await Payment.aggregate([
+  { $match: { status: 'completed' } },          // include all hospitals
+  { $group: { _id: null, total: { $sum: '$amount' } } }
+]);
+const totalRevenue = revenueAgg[0]?.total || 0; // no division
+
+
+    res.json({
+      hospitalsCount,
+      doctorsCount,
+      nursesCount,
+      totalRevenue,
+      patientsPerHospital: patientsAgg
+    });
+  } catch (err) { next(err); }
+}
+
+
 
 // POST /api/admin/hospitals
 async function createHospital(req, res, next) {
@@ -92,4 +146,4 @@ async function updateHospitalStatus(req, res, next) {
   }
 }
 
-module.exports = { createHospital, listHospitals, updateHospitalStatus };
+module.exports = { createHospital, listHospitals, updateHospitalStatus , getPlatformStats};
