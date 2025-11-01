@@ -16,8 +16,29 @@
 //   );
 // }
 import AdminNav from '../../components/AdminNav';
+import { useEffect, useState } from 'react';
+import http from '../../api/http';
+
 
 export default function AdminHome() {
+  const [stats, setStats] = useState({
+  hospitalsCount: 0,
+  doctorsCount: 0,
+  nursesCount: 0,
+  totalRevenue: 0,
+  patientsPerHospital: []
+});
+useEffect(() => {
+  (async () => {
+    try {
+      const { data } = await http.get('/admin/stats');
+      setStats(data || {});
+    } catch {
+      setStats(prev => ({ ...prev }));
+    }
+  })();
+}, []);
+
   return (
     <>
       <style>{`
@@ -191,73 +212,68 @@ export default function AdminHome() {
             <p className="admin-subtitle">Manage hospitals, monitor activity, and oversee platform operations</p>
           </div>
           
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">🏥</div>
-              <div className="stat-value">--</div>
-              <div className="stat-label">Total Hospitals</div>
-            </div>
-            
-            <div className="stat-card" style={{borderLeftColor: 'var(--color-success)'}}>
-              <div className="stat-icon" style={{background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)'}}>✅</div>
-              <div className="stat-value" style={{color: 'var(--color-success)'}}>--</div>
-              <div className="stat-label">Active Hospitals</div>
-            </div>
-            
-            <div className="stat-card" style={{borderLeftColor: 'var(--color-danger)'}}>
-              <div className="stat-icon" style={{background: 'linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%)'}}>⏸️</div>
-              <div className="stat-value" style={{color: 'var(--color-danger)'}}>--</div>
-              <div className="stat-label">Suspended</div>
+        <div className="stats-grid">
+  <div className="stat-card">
+    <div className="stat-icon">🏥</div>
+    <div className="stat-value">{stats.hospitalsCount ?? 0}</div>
+    <div className="stat-label">Hospitals</div>
+  </div>
+
+  <div className="stat-card" style={{borderLeftColor: 'var(--color-primary)'}}>
+    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)'}}>👨‍⚕️</div>
+    <div className="stat-value" style={{color: 'var(--color-primary)'}}>{stats.doctorsCount ?? 0}</div>
+    <div className="stat-label">Doctors</div>
+  </div>
+
+  <div className="stat-card" style={{borderLeftColor: 'var(--color-success)'}}>
+    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)'}}>🧑‍⚕️</div>
+    <div className="stat-value" style={{color: 'var(--color-success)'}}>{stats.nursesCount ?? 0}</div>
+    <div className="stat-label">Nurses</div>
+  </div>
+
+  <div className="stat-card" style={{borderLeftColor: '#f59e0b'}}>
+    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)'}}>💰</div>
+    <div className="stat-value" style={{color: '#f59e0b'}}>₹{Number(stats.totalRevenue || 0).toLocaleString('en-IN')}</div>
+    <div className="stat-label">Total Revenue</div>
+  </div>
+</div>
+
+<div className="quick-actions">
+  <h3 className="section-title">Patients per Hospital</h3>
+  <div className="action-list">
+    {Array.isArray(stats.patientsPerHospital) && stats.patientsPerHospital.length > 0 ? (
+      stats.patientsPerHospital.map(row => (
+        <div key={row.hospitalId} className="action-item">
+          <div className="action-info">
+            <div className="action-icon">🏥</div>
+            <div className="action-text">
+              <h4>{row.hospitalName}</h4>
+              <p>ID: {row.hospitalId}</p>
             </div>
           </div>
+          <button className="action-btn" disabled>
+            {row.count} Patients
+          </button>
+        </div>
+      ))
+    ) : (
+      <div className="action-item">
+        <div className="action-info">
+          <div className="action-icon">ℹ️</div>
+          <div className="action-text">
+            <h4>No data yet</h4>
+            <p>Patients per hospital will appear here</p>
+          </div>
+        </div>
+        <button className="action-btn" disabled>—</button>
+      </div>
+    )}
+  </div>
+</div>
+
+
           
-          <div className="quick-actions">
-            <h3 className="section-title">
-              <span>⚡</span>
-              Quick Actions
-            </h3>
-            
-            <div className="action-list">
-              <div className="action-item">
-                <div className="action-info">
-                  <div className="action-icon">🏥</div>
-                  <div className="action-text">
-                    <h4>Create Hospital</h4>
-                    <p>Register a new hospital with owner account</p>
-                  </div>
-                </div>
-                <button className="action-btn" onClick={() => window.location.href = '/admin/hospitals'}>
-                  Go →
-                </button>
-              </div>
-              
-              <div className="action-item">
-                <div className="action-info">
-                  <div className="action-icon">📋</div>
-                  <div className="action-text">
-                    <h4>View All Hospitals</h4>
-                    <p>Manage hospital status and settings</p>
-                  </div>
-                </div>
-                <button className="action-btn" onClick={() => window.location.href = '/admin/hospitals'}>
-                  View →
-                </button>
-              </div>
-              
-              <div className="action-item">
-                <div className="action-info">
-                  <div className="action-icon">📊</div>
-                  <div className="action-text">
-                    <h4>Activity Report</h4>
-                    <p>Recent admin actions and system logs</p>
-                  </div>
-                </div>
-                <button className="action-btn" style={{opacity: 0.5, cursor: 'not-allowed'}} disabled>
-                  Coming Soon
-                </button>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </>

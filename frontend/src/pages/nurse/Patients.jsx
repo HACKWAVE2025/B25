@@ -121,6 +121,14 @@ export default function Patients() {
       const age = personal.age ?? null;
       const gender = personal.gender || '';
       const photo = (Array.isArray(d.photos) && d.photos[0]?.url) || personal.photo || '';
+      const aiTargetFor = (p) => {
+  const ref = encodeURIComponent(p.patientId || p.id);
+  const t = (p.conditionType || 'other').toLowerCase();
+  if (t === 'skin') return `/ai/skin?ref=${ref}`;
+  if (t === 'wound') return `/ai/wound?ref=${ref}`;
+  return `/ai/rural?ref=${ref}`;
+};
+
       return {
         id,
         patientId: d.patientId,
@@ -534,6 +542,8 @@ export default function Patients() {
                   <th>Age/Gender</th>
                   <th>Condition</th>
                   <th>Actions</th>
+                  <th>AI-Assistance</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -569,6 +579,18 @@ export default function Patients() {
     ✏️ Edit
   </button>
 </td>
+<td>
+ <a className="btn-icon" href={
+  ((p.conditionType || 'other').toLowerCase() === 'skin')
+    ? `/ai/skin?ref=${encodeURIComponent(p.patientId || p.id)}`
+    : ((p.conditionType || 'other').toLowerCase() === 'wound')
+      ? `/ai/wound?ref=${encodeURIComponent(p.patientId || p.id)}`
+      : `/ai/rural?ref=${encodeURIComponent(p.patientId || p.id)}`
+} style={{textDecoration: 'none'}}
+>🤖 Assist</a>
+
+</td>
+
 
                   </tr>
                 ))}
