@@ -365,69 +365,93 @@ export default function NurseConsults() {
     }
   };
 
-  const createOrder = async () => {
-    const cid = (pay.consultationId || '').trim();
-    if (!cid || !pay.amount) {
-      alert('Enter consultationId and amount');
-      return;
-    }
-    try {
-      const { data } = await http.post('/payments/orders', {
-        consultationRef: cid,
-        amountInRupees: pay.amount
-      });
-      setOrderInfo(data);
-      toast('Payment order created');
-    } catch (e) {
-      alert(e.response?.data?.message || 'Order creation failed');
-    }
-  };
+ const createOrder = async () => {
+  const cid = (pay.consultationId || '').trim();
+  if (!cid || !pay.amount) { alert('Enter consultationId and amount'); return; }
+  try {
+    const { data } = await http.post('/payments/orders', {
+      consultationRef: cid,
+      amountInRupees: pay.amount
+    });
+    setOrderInfo({ ...data, consultationRef: cid }); // keep ref for optimistic updates
+    toast('Payment order created');
+  } catch (e) {
+    alert(e.response?.data?.message || 'Order creation failed');
+  }
+};
 
-  const openRazorpay = () => {
-    if (!orderInfo) return;
-    const options = {
-      key: orderInfo.razorpay_key_id,
-      amount: orderInfo.amount,
-      currency: orderInfo.currency,
-      name: 'AyuSahayak',
-      description: `Consultation Payment`,
-      order_id: orderInfo.orderId,
-      handler: async (response) => {
-        try {
-          await http.post('/payments/verify', {
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature
-          });
-          toast('Payment successful ✓');
-          setOrderInfo(null);
-          setPay({ consultationId:'', amount:'200' });
-          load();
-        } catch (e) {
-          alert('Payment verification failed');
-        }
-      },
-      prefill: { name: '', email: '', contact: '' },
-      theme: { color: '#00897B' }
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+
+const openRazorpay = () => {
+  if (!orderInfo) return;
+  if (!window.Razorpay) { alert('Razorpay not loaded yet'); return; }
+
+  const options = {
+    key: process.env.REACT_APP_RAZORPAY_KEY_ID, // from .env
+    amount: orderInfo.amount,
+    currency: orderInfo.currency,
+    name: 'AyuSahayak',
+    description: 'Consultation Payment',
+    order_id: orderInfo.orderId,
+    handler: async (response) => {
+      try {
+        await http.post('/payments/verify', {
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature
+        });
+        toast('Payment successful ✓');
+        // optimistic flip for the corresponding row
+        setConsults(prev => prev.map(x =>
+          x.consultationId === orderInfo.consultationRef ? { ...x, payReady: true } : x
+        ));
+        setOrderInfo(null);
+        setPay({ consultationId:'', amount:'200' });
+        load();
+      } catch (e) {
+        alert(e.response?.data?.message || 'Payment verification failed');
+      }
+    },
+    theme: { color: '#00897B' }
   };
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+};
+
 
   const viewPrescription = (consultationIdOrRef) => {
     setPrRef(consultationIdOrRef);
     window.location.href = `/nurse/prescription?ref=${encodeURIComponent(consultationIdOrRef)}`;
   };
 
-  const enableVideo = async (id) => {
-    try {
-      await http.patch(`/nurse/consultations/${id}/enable-video`);
-      toast('Video enabled ✓');
-      load();
-    } catch (e) {
-      alert(e.response?.data?.message || 'Failed');
-    }
-  };
+const enableVideo = async (id) => {
+  try {
+    await http.post(`/nurse/consultations/${id}/video/start`);
+    toast('Video enabled ✓');
+    load();
+  } catch (e) {
+    alert(e.response?.data?.message || 'Failed');
+  }
+};
+const canViewRx = (c) => c.status === 'completed';
+// Doctor accepted => not 'in_queue'; also block when 'declined'
+const canVideo = (c) => c.status !== 'in_queue' && c.status !== 'declined';
+
+
+const onRxClick = (c) => {
+  if (!canViewRx(c)) { toast('Prescription visible after completion'); return; }
+  viewPrescription(c.consultationId || c.id);
+};
+
+const onVideoClick = async (c) => {
+  if (!canVideo(c)) return;
+  // Optional: start the video room first, then navigate
+  try {
+    await enableVideo(c.id);
+  } catch {}
+  window.location.href = `/video?ref=${encodeURIComponent(c.consultationId || c.id)}`;
+};
+
+
 
   return (
     <div className="consults-page">
@@ -782,7 +806,6 @@ export default function NurseConsults() {
                 <tr>
                   <th>ID</th>
                   <th>Patient</th>
-                  <th>Complaint</th>
                   <th>Status</th>
                   <th>Payment</th>
                   <th>Created</th>
@@ -794,9 +817,6 @@ export default function NurseConsults() {
                   <tr key={c.id}>
                     <td style={{fontFamily:'monospace', fontSize:13}}>{c.consultationId}</td>
                     <td>{c.patient?.name || '—'}</td>
-                    <td style={{maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
-                      {c.chiefComplaint || '—'}
-                    </td>
                     <td>
                       <span className={`badge badge-${c.status === 'completed' ? 'completed' : c.status === 'in_progress' ? 'progress' : 'queue'}`}>
                         {c.status === 'in_queue' && '⏳'}
@@ -806,41 +826,29 @@ export default function NurseConsults() {
                       </span>
                     </td>
                     <td>
-                      <span className={`badge badge-${c.paymentStatus === 'paid' ? 'paid' : 'pending'}`}>
-                        {c.paymentStatus === 'paid' ? '✓ Paid' : '⏳ Pending'}
-                      </span>
-                    </td>
+                    <span className={`badge badge-${c.payReady ? 'paid' : 'pending'}`}>
+                     {c.payReady ? '✓ Paid' : '⏳ Pending'}
+                     </span>
+                     </td>
+
                     <td style={{fontSize:13, color:'hsl(215 16% 47%)'}}>
                       {new Date(c.createdAt).toLocaleDateString()}
                     </td>
                     <td>
-                      <div className="action-buttons">
-                        {c.status === 'completed' && (
-                          <button 
-                            className="btn btn-outline btn-sm" 
-                            onClick={()=>viewPrescription(c.consultationId)}
-                          >
-                            📄 Rx
-                          </button>
-                        )}
-                        {(c.status === 'in_progress' || c.status === 'completed') && (
-                          <button 
-                            className="btn btn-outline btn-sm" 
-                            onClick={()=>window.location.href=`/video?ref=${encodeURIComponent(c.consultationId)}`}
-                          >
-                            📹 Video
-                          </button>
-                        )}
-                        {c.status === 'in_progress' && !c.video?.enabled && (
-                          <button 
-                            className="btn btn-secondary btn-sm" 
-                            onClick={()=>enableVideo(c.id)}
-                          >
-                            Enable Video
-                          </button>
-                        )}
-                      </div>
-                    </td>
+  <div className="action-buttons">
+    <button className="btn btn-outline btn-sm" onClick={() => onRxClick(c)}
+      title={canViewRx(c) ? 'View Prescription' : 'Prescription visible after completion'}>
+      📄 Rx
+    </button>
+    <button className="btn btn-outline btn-sm" onClick={() => onVideoClick(c)}
+      disabled={!canVideo(c)}
+      title={canVideo(c) ? 'Start Video Call' : 'Doctor has not accepted the case'}
+      style={{ opacity: canVideo(c) ? 1 : 0.6, cursor: canVideo(c) ? 'pointer' : 'not-allowed' }}>
+      📹 Video
+    </button>
+  </div>
+</td>
+
                   </tr>
                 ))}
               </tbody>

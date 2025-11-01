@@ -435,9 +435,8 @@ export default function PrescriptionView() {
             )}
 
             <div className="rx-footer">
-              <p><strong>AyuSahayak Healthcare Platform</strong></p>
-              <p>This is a computer-generated prescription and is valid with or without a physical signature.</p>
-              <p>For any queries, please contact your healthcare provider.</p>
+              <p><strong>AyuSahayak Rural Healthcare Platform</strong></p>
+              <p>Prescription is digitally approved by the doctor</p>
             </div>
           </div>
         )}
