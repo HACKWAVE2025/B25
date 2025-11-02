@@ -3,6 +3,7 @@ const router = require('express').Router();
 const { authenticate } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 const upload  = require('../middleware/upload');
+const { getNurseStats } = require('../controllers/nurseController');
 const {
   createPatient,
   listPatients,
@@ -20,5 +21,5 @@ router.post('/consultations', authenticate, authorize('nurse'), startOrQueueCons
 router.get('/consultations', authenticate, authorize('nurse'), listConsultationsByNurse);
 
 router.post('/consultations/:id/video/start', authenticate, authorize('nurse'), startVideoForConsultation);
-
+router.get('/stats', authenticate, authorize('nurse'), getNurseStats);
 module.exports = router;
