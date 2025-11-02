@@ -14,7 +14,28 @@
 //   );
 // }
 import NurseNav from '../../components/NurseNav';
+import { useEffect, useState } from 'react';
+import http from '../../api/http';
+
 export default function NurseHome() {
+  const [stats, setStats] = useState({
+  patientsRegistered: 0,
+  consultationsCreated: 0,
+  consultationsCompleted: 0,
+  revenue: 0
+});
+
+useEffect(() => {
+  (async () => {
+    try {
+      const { data } = await http.get('/nurse/stats');
+      setStats(data || {});
+    } catch {
+      // keep zeros on failure
+    }
+  })();
+}, []);
+
   return (
     <>
       <style>{`
@@ -36,18 +57,32 @@ export default function NurseHome() {
           <h1 className="page-title">Nurse Dashboard</h1>
           <p style={{color: 'var(--color-gray-400)', marginBottom: 32}}>Register patients and manage consultations</p>
           
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-value">--</div>
-              <div className="stat-label">PATIENTS REGISTERED TODAY</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">📋</div>
-              <div className="stat-value">--</div>
-              <div className="stat-label">CONSULTATIONS CREATED</div>
-            </div>
-          </div>
+<div className="stats-grid">
+  <div className="stat-card">
+    <div className="stat-icon">👥</div>
+    <div className="stat-value">{stats.patientsRegistered ?? 0}</div>
+    <div className="stat-label">PATIENTS REGISTERED</div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-icon">📋</div>
+    <div className="stat-value">{stats.consultationsCreated ?? 0}</div>
+    <div className="stat-label">CONSULTATIONS CREATED</div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-icon">✅</div>
+    <div className="stat-value">{stats.consultationsCompleted ?? 0}</div>
+    <div className="stat-label">COMPLETED CONSULTATIONS</div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-icon">💰</div>
+    <div className="stat-value">₹{Number(stats.revenue || 0).toLocaleString('en-IN')}</div>
+    <div className="stat-label">REVENUE (BY MY PATIENTS)</div>
+  </div>
+</div>
+
           
           <div className="quick-actions">
             <h3 style={{marginBottom: 24}}>Quick Actions</h3>

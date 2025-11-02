@@ -201,6 +201,54 @@ useEffect(() => {
           background: var(--color-primary-light);
           transform: translateX(4px);
         }
+        
+.pph-card{
+  background: #ffffff !important;
+  color: #111827 !important;              /* text in the card defaults to dark */
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.pph-title{
+  color: #0f172a !important;              /* slate-900 */
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.pph-list{ list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+.pph-item{
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: #f8fafc !important;         /* slate-50/100 */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.pph-left{ display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.pph-icon{
+  width: 40px; height: 40px; display: grid; place-items: center;
+  background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; flex-shrink: 0;
+}
+
+.pph-name{ color: #111827 !important; font-weight: 600; }  /* gray-900 */
+.pph-id{ color: #6b7280 !important; font-size: 12px; }      /* gray-500 */
+.pph-count{ color: #2563eb !important; font-weight: 700; white-space: nowrap; } /* primary */
+
+.pph-empty{
+  padding: 24px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 12px;
+  color: #475569 !important;
+  background: #f8fafc !important;
+}
+
+.pph-empty-icon{ font-size: 20px; }
+
       `}</style>
       
       <div className="admin-home">
@@ -238,42 +286,35 @@ useEffect(() => {
   </div>
 </div>
 
-<div className="quick-actions">
-  <h3 className="section-title">Patients per Hospital</h3>
-  <div className="action-list">
-    {Array.isArray(stats.patientsPerHospital) && stats.patientsPerHospital.length > 0 ? (
-      stats.patientsPerHospital.map(row => (
-        <div key={row.hospitalId} className="action-item">
-          <div className="action-info">
-            <div className="action-icon">🏥</div>
-            <div className="action-text">
-              <h4>{row.hospitalName}</h4>
-              <p>ID: {row.hospitalId}</p>
+<div className="pph-card">
+  <h3 className="pph-title">Patients per Hospital</h3>
+
+  {Array.isArray(stats.patientsPerHospital) && stats.patientsPerHospital.length > 0 ? (
+    <ul className="pph-list">
+      {stats.patientsPerHospital.map(row => (
+        <li key={row.hospitalId} className="pph-item">
+          <div className="pph-left">
+            <div className="pph-icon">🏥</div>
+            <div>
+              <div className="pph-name">{row.hospitalName}</div>
+              <div className="pph-id">ID: {row.hospitalId}</div>
             </div>
           </div>
-          <button className="action-btn" disabled>
-            {row.count} Patients
-          </button>
-        </div>
-      ))
-    ) : (
-      <div className="action-item">
-        <div className="action-info">
-          <div className="action-icon">ℹ️</div>
-          <div className="action-text">
-            <h4>No data yet</h4>
-            <p>Patients per hospital will appear here</p>
-          </div>
-        </div>
-        <button className="action-btn" disabled>—</button>
-      </div>
-    )}
-  </div>
+          <div className="pph-count">{row.count} patients</div>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <div className="pph-empty">
+      <div className="pph-empty-icon">ℹ️</div>
+      <div>No patient registrations yet</div>
+    </div>
+  )}
 </div>
 
 
-          
 
+          
         </div>
       </div>
     </>
